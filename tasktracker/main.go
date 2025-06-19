@@ -25,31 +25,18 @@ type taskList struct{
 	taskList []task
 }
 
-func (t task) String() string {
-	return fmt.Sprintf("task{\nid: %d\ndescription: %s\nstatus: %d\ncreatedAt: %s\nupdatedAt: %v\n}",
-		t.id, t.description, t.status, t.createdAt.Format(time.RFC3339), t.updatedAt)
-}
-
 func main() {
 	myList := &taskList{}
 
 	addTask(myList,"This is my first task");
 	addTask(myList,"This is my Second task");
-	addTask(myList,"This is my Second task");
+	updateTask(myList,2,"The second is updated",1)
+	deleteTask(myList,3)
 
 	for _,v := range myList.taskList{
 		fmt.Print(v)
 	}
 }
-
-var getId = func() func() int {
-	count := 0
-	return func() int {
-		count++
-		return count
-	}
-}()
-
 
 func createTask(description string) task{
 	return task{
@@ -64,4 +51,56 @@ func createTask(description string) task{
 func addTask(list *taskList,description string){
 	newTask:=createTask(description);
 	list.taskList = append(list.taskList,newTask)
+}
+
+func updateTask(list *taskList, id int, description string, status status){
+	task := getByID(id,list);
+	if task ==nil{
+		println("Task doesn't exist")
+		return
+	}
+	task.description = description;
+	task.status = status;
+	now := time.Now()
+	task.updatedAt = &now
+	
+}
+func deleteTask(list *taskList, id int){
+	for i:=range list.taskList{
+		if(list.taskList[i].id==id){
+			list.taskList = append(list.taskList[:i],list.taskList[i+1:]...)
+			return
+		}
+	}
+	println("Task doesn't exist")
+}
+
+//helper 
+func getByID(id int, list *taskList) *task {
+	for i := range list.taskList {
+		if list.taskList[i].id == id {
+			return &list.taskList[i] 
+		}
+	}
+	return nil
+}
+
+
+var getId = func() func() int {
+	count := 0
+	return func() int {
+		count++
+		return count
+	}
+}()
+
+func (t task) String() string {
+	var updatedAtStr string;
+	if(t.updatedAt!=nil){
+		updatedAtStr =t.updatedAt.Format(time.RFC3339);
+	}else{
+		updatedAtStr = "<nil>"
+	}
+	return fmt.Sprintf("task{\nid: %d\ndescription: %s\nstatus: %d\ncreatedAt: %s\nupdatedAt: %v\n}\n",
+		t.id, t.description, t.status, t.createdAt.Format(time.RFC3339), updatedAtStr)
 }
